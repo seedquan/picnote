@@ -30,7 +30,7 @@ iPhone → iCloud sync → Mac Photos Library → PicNote → Markdown notes
 ### Install
 
 ```bash
-npm install -g picnote
+npm install -g @seedquan/picnote
 
 # Or install from source
 cd ~/Projects/picnote
