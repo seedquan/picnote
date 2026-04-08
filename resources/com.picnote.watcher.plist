@@ -7,13 +7,8 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/python3</string>
-        <string>-m</string>
-        <string>src.main</string>
+        <string>picnote</string>
     </array>
-
-    <key>WorkingDirectory</key>
-    <string>/Users/iris/Projects/picnote</string>
 
     <key>WatchPaths</key>
     <array>
@@ -24,10 +19,16 @@
     <integer>30</integer>
 
     <key>StandardOutPath</key>
-    <string>/Users/iris/Documents/PicNote/logs/launchd-stdout.log</string>
+    <string>/Users/iris/.picnote/logs/launchd-stdout.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/iris/Documents/PicNote/logs/launchd-stderr.log</string>
+    <string>/Users/iris/.picnote/logs/launchd-stderr.log</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+    </dict>
 
     <key>RunAtLoad</key>
     <false/>

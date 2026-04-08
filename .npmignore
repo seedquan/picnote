@@ -1,0 +1,12 @@
+src/
+tests/
+.harness/
+.gitignore
+tsconfig.json
+vitest.config.ts
+logs/
+*.db
+*.tmp
+.DS_Store
+node_modules/
+coverage/

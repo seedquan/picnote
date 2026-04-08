@@ -1,5 +1,5 @@
 {
-  "name": "picnote",
+  "name": "@seedquan/picnote",
   "version": "0.1.0",
   "description": "AI-powered photo intelligence — monitors iPhone photos via iCloud, classifies and extracts info, generates searchable Markdown notes",
   "type": "module",

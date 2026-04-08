@@ -47,7 +47,17 @@ export const DEFAULT_CONFIG: PicNoteConfig = {
   },
 };
 
-function expandHome(p: string): string {
+/** Home directory: ~/.picnote/ */
+export function getHomeDir(): string {
+  return path.join(os.homedir(), '.picnote');
+}
+
+/** Path to the config file inside the home directory */
+export function getConfigPath(): string {
+  return path.join(getHomeDir(), 'config.yaml');
+}
+
+export function expandHome(p: string): string {
   if (p.startsWith('~/') || p === '~') {
     return path.join(os.homedir(), p.slice(2));
   }
@@ -76,7 +86,13 @@ export function loadConfig(configPath?: string): PicNoteConfig {
   let config: PicNoteConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
   if (!configPath) {
-    configPath = path.join(path.dirname(path.dirname(import.meta.url.replace('file://', ''))), 'config.yaml');
+    // Look in home directory first, then fall back to project dir
+    const homeConfig = getConfigPath();
+    if (fs.existsSync(homeConfig)) {
+      configPath = homeConfig;
+    } else {
+      configPath = path.join(path.dirname(path.dirname(import.meta.url.replace('file://', ''))), 'config.yaml');
+    }
   }
 
   if (fs.existsSync(configPath)) {
@@ -91,6 +107,16 @@ export function loadConfig(configPath?: string): PicNoteConfig {
   config.photos_library = expandHome(config.photos_library);
 
   return config;
+}
+
+export function saveConfig(config: PicNoteConfig, configPath?: string): void {
+  const p = configPath ?? getConfigPath();
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  fs.writeFileSync(p, yaml.dump(config, { indent: 2 }), 'utf-8');
+}
+
+export function isInitialized(): boolean {
+  return fs.existsSync(getConfigPath());
 }
 
 export interface OutputPaths {
