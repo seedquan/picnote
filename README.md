@@ -23,15 +23,19 @@ iPhone → iCloud sync → Mac Photos Library → PicNote → Markdown notes
 ### Prerequisites
 
 - macOS with iCloud Photos enabled
-- Python 3.9+
+- Node.js 18+
 - [Claude Code CLI](https://claude.ai/code) installed
 - Xcode Command Line Tools (for Swift compiler)
 
 ### Install
 
 ```bash
+npm install -g picnote
+
+# Or install from source
 cd ~/Projects/picnote
-pip3 install -r requirements.txt
+npm install
+npm run build
 
 # Compile the Swift Vision OCR helper
 swiftc -o swift/vision_ocr swift/vision_ocr.swift -framework AppKit -framework Vision
@@ -50,19 +54,19 @@ photos_library: ~/Pictures/Photos Library.photoslibrary
 
 ```bash
 # Process new photos
-python3 -m src.main
+picnote
 
 # Search notes
-python3 -m src.main --search "restaurant"
+picnote --search "restaurant"
 
 # View stats
-python3 -m src.main --stats
+picnote --stats
 ```
 
 ### Auto-run on photo sync
 
 ```bash
-# Install the launchd watcher
+# Install the launchd watcher (update ProgramArguments to use node + dist/main.js)
 cp resources/com.picnote.watcher.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.picnote.watcher.plist
 ```
@@ -92,10 +96,10 @@ This watches your Photos.sqlite for changes and runs PicNote automatically withi
 ## Tests
 
 ```bash
-python3 -m pytest tests/ -v
+npm test
 ```
 
-204 tests covering all modules, including safety tests that verify read-only guarantees.
+105 tests covering all modules, including safety tests that verify read-only guarantees.
 
 ## License
 
