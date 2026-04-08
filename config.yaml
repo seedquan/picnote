@@ -1,0 +1,37 @@
+# PicNote Configuration
+# AI-powered photo intelligence system
+
+# Where to output notes and data (configurable)
+output_dir: ~/Documents/PicNote
+
+# Photos library path (auto-detected, override if needed)
+photos_library: ~/Pictures/Photos Library.photoslibrary
+
+# Processing behavior
+classification:
+  # Automatically process all screenshots as informational
+  auto_process_screenshots: true
+  # Skip images that only contain faces (no text)
+  skip_faces_only: true
+  # Use Claude Code CLI for ambiguous classification
+  claude_fallback: true
+
+# Note format
+notes:
+  format: markdown        # markdown | json
+  organize_by: date       # date | category
+
+# What to skip (never send to AI)
+sensitive_keywords:
+  - password
+  - SSN
+  - bank account
+
+# Processing limits
+processing:
+  # Maximum images to process per run
+  max_batch_size: 50
+  # Thumbnail size (longest edge in pixels)
+  thumbnail_size: 800
+  # JPEG quality for thumbnails
+  thumbnail_quality: 85
