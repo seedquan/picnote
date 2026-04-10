@@ -1,6 +1,9 @@
-import { execFileSync } from 'child_process';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import type { PhotoAsset } from './watcher.js';
 import type { PicNoteConfig } from './config.js';
+
+const execFileAsync = promisify(execFile);
 
 export const Classification = {
   INFORMATIONAL: 'informational',
@@ -21,7 +24,7 @@ const CASUAL_SCENES = new Set([
   'flower', 'garden', 'party', 'celebration', 'sport',
 ]);
 
-export function classifyImage(asset: PhotoAsset, config: PicNoteConfig): string {
+export async function classifyImage(asset: PhotoAsset, config: PicNoteConfig): Promise<string> {
   const classConfig = config.classification;
 
   const result = classifyLocal(asset, classConfig);
@@ -77,7 +80,7 @@ function classifyLocal(
   return Classification.AMBIGUOUS;
 }
 
-function classifyWithClaude(asset: PhotoAsset, config: PicNoteConfig): string {
+async function classifyWithClaude(asset: PhotoAsset, config: PicNoteConfig): Promise<string> {
   if (!asset.filePath) return Classification.INFORMATIONAL;
 
   const prompt =
@@ -89,7 +92,7 @@ function classifyWithClaude(asset: PhotoAsset, config: PicNoteConfig): string {
   const timeout = config.processing.claude_timeout_classify * 1000;
 
   try {
-    const stdout = execFileSync(
+    const { stdout } = await execFileAsync(
       'claude',
       ['-p', prompt, '--image', asset.filePath, '--output-format', 'text'],
       { timeout, encoding: 'utf-8' },

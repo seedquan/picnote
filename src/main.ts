@@ -36,7 +36,7 @@ async function processSingleImage(
     return false;
   }
 
-  const classification = classifyImage(asset, config);
+  const classification = await classifyImage(asset, config);
   db.logProcessing({ photoUuid: uuid, stage: 'classification', status: classification, durationMs: Date.now() - start });
 
   if (classification === Classification.CASUAL) {
@@ -51,7 +51,7 @@ async function processSingleImage(
   const extraction = extractFromImage(asset.filePath);
   db.logProcessing({ photoUuid: uuid, stage: 'extraction', status: hasData(extraction) ? 'success' : 'empty', durationMs: Date.now() - start });
 
-  const analysis = analyzeImage(asset.filePath, extraction, config);
+  const analysis = await analyzeImage(asset.filePath, extraction, config);
   db.logProcessing({ photoUuid: uuid, stage: 'analysis', status: analysis ? 'success' : 'failed', durationMs: Date.now() - start });
 
   const notePath = await generateNote(asset, extraction, analysis, config, outputPaths);
@@ -102,22 +102,37 @@ async function cmdRun(config: PicNoteConfig, jsonOutput: boolean): Promise<void>
     return;
   }
 
-  const spinner = new Spinner(`Processing ${assets.length} photos`).start();
+  const concurrency = config.processing.concurrency ?? 1;
+  const spinner = new Spinner(`Processing ${assets.length} photos (${concurrency} concurrent)`).start();
   let notesCreated = 0;
+  let completed = 0;
   let latestTimestamp = sinceTimestamp;
 
+  const executing = new Set<Promise<void>>();
+
   for (const asset of assets) {
-    try {
-      if (await processSingleImage(asset, db, config, outputPaths)) notesCreated++;
-      if (asset.capturedAt) {
-        const ts = (asset.capturedAt.getTime() - APPLE_EPOCH.getTime()) / 1000;
-        if (latestTimestamp == null || ts > latestTimestamp) latestTimestamp = ts;
+    const task = (async () => {
+      try {
+        if (await processSingleImage(asset, db, config, outputPaths)) notesCreated++;
+        if (asset.capturedAt) {
+          const ts = (asset.capturedAt.getTime() - APPLE_EPOCH.getTime()) / 1000;
+          if (latestTimestamp == null || ts > latestTimestamp) latestTimestamp = ts;
+        }
+      } catch (err: any) {
+        log.error(`${asset.uuid}: ${err.message}`);
+        db.logProcessing({ photoUuid: asset.uuid, stage: 'pipeline', status: 'error', errorMessage: err.message });
       }
-    } catch (err: any) {
-      log.error(`${asset.uuid}: ${err.message}`);
-      db.logProcessing({ photoUuid: asset.uuid, stage: 'pipeline', status: 'error', errorMessage: err.message });
+      completed++;
+      spinner.update(`Processing ${completed}/${assets.length} photos`);
+    })();
+
+    executing.add(task);
+    task.finally(() => executing.delete(task));
+    if (executing.size >= concurrency) {
+      await Promise.race(executing);
     }
   }
+  await Promise.all(executing);
 
   spinner.stop();
 

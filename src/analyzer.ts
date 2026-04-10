@@ -1,7 +1,10 @@
-import { execFileSync } from 'child_process';
+import { execFileSync, execFile } from 'child_process';
+import { promisify } from 'util';
 import type { ExtractionResult } from './extractor.js';
 import { extractionToDict } from './extractor.js';
 import type { PicNoteConfig } from './config.js';
+
+const execFileAsync = promisify(execFile);
 
 const ANALYSIS_PROMPT = `Analyze this image and extract structured information. You are given OCR text that was already extracted from the image.
 
@@ -36,11 +39,11 @@ export interface AnalysisResult {
   action_items: string[];
 }
 
-export function analyzeImage(
+export async function analyzeImage(
   imagePath: string,
   extraction: ExtractionResult,
   config: PicNoteConfig,
-): AnalysisResult | null {
+): Promise<AnalysisResult | null> {
   // Check for sensitive content (normalize OCR text for robust matching)
   const sensitiveKeywords = config.sensitive_keywords || [];
   const ocrNormalized = extraction.ocrText.toLowerCase().replace(/[\s\u200b\u200c\u200d\ufeff]+/g, '');
@@ -62,7 +65,7 @@ export function analyzeImage(
   const timeout = config.processing.claude_timeout_analyze * 1000;
 
   try {
-    const stdout = execFileSync(
+    const { stdout } = await execFileAsync(
       'claude',
       ['-p', prompt, '--image', imagePath, '--output-format', 'text'],
       { timeout, encoding: 'utf-8' },
@@ -76,15 +79,24 @@ export function analyzeImage(
 }
 
 export function parseJsonResponse(response: string): AnalysisResult | null {
-  const match = response.match(/```(?:json)?\s*\n?(.*?)```/s);
-  const candidate = match ? match[1].trim() : response.trim();
-
-  try {
-    return JSON.parse(candidate);
-  } catch {
-    console.warn(`Failed to parse Claude response as JSON: ${response.slice(0, 200)}`);
-    return null;
+  // Strategy 1: code fences
+  const fenceMatch = response.match(/```(?:json)?\s*\n?(.*?)```/s);
+  if (fenceMatch) {
+    try { return JSON.parse(fenceMatch[1].trim()); } catch { /* fall through */ }
   }
+
+  // Strategy 2: find first { ... } block (handles text around JSON)
+  const braceMatch = response.match(/\{[\s\S]*\}/);
+  if (braceMatch) {
+    try { return JSON.parse(braceMatch[0]); } catch {
+      // Strategy 3: try fixing trailing commas
+      const fixed = braceMatch[0].replace(/,\s*([\]}])/g, '$1');
+      try { return JSON.parse(fixed); } catch { /* fall through */ }
+    }
+  }
+
+  console.warn(`Failed to parse Claude response as JSON: ${response.slice(0, 200)}`);
+  return null;
 }
 
 export function generateLocalAnalysis(extraction: ExtractionResult): AnalysisResult {

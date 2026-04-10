@@ -22,6 +22,7 @@ export interface PicNoteConfig {
     thumbnail_quality: number;
     claude_timeout_classify: number;
     claude_timeout_analyze: number;
+    concurrency: number;
   };
 }
 
@@ -44,6 +45,7 @@ export const DEFAULT_CONFIG: PicNoteConfig = {
     thumbnail_quality: 85,
     claude_timeout_classify: 30,
     claude_timeout_analyze: 60,
+    concurrency: 3,
   },
 };
 

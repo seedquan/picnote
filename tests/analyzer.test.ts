@@ -36,8 +36,23 @@ describe('parseJsonResponse', () => {
     expect(r?.title).toBe('First');
   });
 
-  it('handles unclosed fence gracefully', () => {
-    expect(parseJsonResponse('```json\n{"title": "X"}')).toBeNull();
+  it('handles unclosed fence by finding JSON object', () => {
+    const r = parseJsonResponse('```json\n{"title": "X", "type": "note"}');
+    expect(r?.title).toBe('X');
+  });
+
+  it('extracts JSON from surrounding text without fences', () => {
+    const r = parseJsonResponse('Here is the result:\n{"title": "Test", "type": "note"}\nHope this helps!');
+    expect(r?.title).toBe('Test');
+  });
+
+  it('handles trailing commas', () => {
+    const r = parseJsonResponse('{"title": "Test", "tags": ["a", "b"]}');
+    expect(r?.title).toBe('Test');
+  });
+
+  it('returns null for completely invalid input', () => {
+    expect(parseJsonResponse('no json here at all')).toBeNull();
   });
 });
 

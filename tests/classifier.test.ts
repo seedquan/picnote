@@ -12,47 +12,47 @@ beforeEach(() => {
 afterEach(() => { cleanup(tmp); });
 
 describe('Local classification', () => {
-  it('screenshot with text → informational', () => {
-    expect(classifyImage(screenshotAsset(tmp), config)).toBe(Classification.INFORMATIONAL);
+  it('screenshot with text → informational', async () => {
+    expect(await classifyImage(screenshotAsset(tmp), config)).toBe(Classification.INFORMATIONAL);
   });
 
-  it('selfie → casual', () => {
-    expect(classifyImage(selfieAsset(tmp), config)).toBe(Classification.CASUAL);
+  it('selfie → casual', async () => {
+    expect(await classifyImage(selfieAsset(tmp), config)).toBe(Classification.CASUAL);
   });
 
-  it('faces only → casual', () => {
+  it('faces only → casual', async () => {
     const asset = sampleAsset(tmp, { faceCount: 3, sceneLabels: ['portrait'] });
-    expect(classifyImage(asset, config)).toBe(Classification.CASUAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.CASUAL);
   });
 
-  it('landscape → casual', () => {
+  it('landscape → casual', async () => {
     const asset = sampleAsset(tmp, { sceneLabels: ['landscape', 'mountain'] });
-    expect(classifyImage(asset, config)).toBe(Classification.CASUAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.CASUAL);
   });
 
-  it('document → informational', () => {
+  it('document → informational', async () => {
     const asset = sampleAsset(tmp, { sceneLabels: ['document'], hasText: true });
-    expect(classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
   });
 
-  it('receipt → informational', () => {
+  it('receipt → informational', async () => {
     const asset = sampleAsset(tmp, { sceneLabels: ['receipt'], hasText: true });
-    expect(classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
   });
 
-  it('screenshot flag fast-tracks', () => {
+  it('screenshot flag fast-tracks', async () => {
     const asset = sampleAsset(tmp, { isScreenshot: true });
-    expect(classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
   });
 
-  it('has text → informational', () => {
+  it('has text → informational', async () => {
     const asset = sampleAsset(tmp, { hasText: true, sceneLabels: ['text'] });
-    expect(classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
   });
 
-  it('no signals + no fallback → informational (default)', () => {
+  it('no signals + no fallback → informational (default)', async () => {
     config.classification.claude_fallback = false;
     const asset = sampleAsset(tmp);
-    expect(classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
+    expect(await classifyImage(asset, config)).toBe(Classification.INFORMATIONAL);
   });
 });

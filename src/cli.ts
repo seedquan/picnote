@@ -54,6 +54,10 @@ export class Spinner {
     return this;
   }
 
+  update(msg: string): void {
+    this.msg = msg;
+  }
+
   stop(final?: string): void {
     if (this.interval) {
       clearInterval(this.interval);
