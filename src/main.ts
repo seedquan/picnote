@@ -173,9 +173,22 @@ function cmdSearch(config: PicNoteConfig, query: string, jsonOutput: boolean): v
   log.info(`Found ${color.bold(String(results.length))} results for "${query}":\n`);
   for (const r of results) {
     const badge = r.classification === 'informational' ? color.green('INFO') : color.dim('CASUAL');
-    process.stderr.write(`  ${badge} ${r.ai_summary || r.ocr_text?.slice(0, 80) || '(no text)'}\n`);
+    const text = r.ai_summary || r.ocr_text?.slice(0, 80) || '(no text)';
+    const highlighted = highlightQuery(text, query);
+    process.stderr.write(`  ${badge} ${highlighted}\n`);
     if (r.note_path) process.stderr.write(`       ${color.dim(r.note_path)}\n`);
   }
+}
+
+function highlightQuery(text: string, query: string): string {
+  if (!query) return text;
+  const words = query.split(/\s+/).filter(Boolean);
+  let result = text;
+  for (const word of words) {
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(`(${escaped})`, 'gi'), color.cyan(color.bold('$1')));
+  }
+  return result;
 }
 
 // ─── Command: stats ───
